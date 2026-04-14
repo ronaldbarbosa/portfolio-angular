@@ -1,11 +1,19 @@
 <div>
   <ng-template #homeContent>
-    <div class="bg-gradient from-emerald-400 to-teal-500 text-white p-6 rounded-lg shadow-lg my-4">
-      <h3 class="text-xl font-bold">🌟 Conteúdo do Componente Avô!</h3>
-      <p class="text-sm mt-2">Isso veio do HomeComponent (avô) e está sendo renderizado no MainComponent (neto)</p>
-      <button class="mt-3 bg-white text-emerald-600 px-4 py-2 rounded-md font-semibold hover:bg-gray-100">
-        Botão do Avô
-      </button>
+    <div class="flex p-5">
+      <div class="hidden lg:flex w-1/3 justify-end items-center mx-10">
+      <img [ngSrc]="imagemUrl" alt="Angular logo" width="512" height="128" class="rounded-4xl" />
+
+      <!-- Teste 4: Usando require (se for build específico) -->
+      </div>
+      <div class="flex flex-col w-2/3 max-lg:w-full mx-5 ml-10 text-white">
+        <h2 class="text-xl text-(--color-primary)!">Full Stack Developer</h2>
+        <h1 class="text-5xl">Ronald Barbosa</h1>
+        <p class="w-5/6 mt-5">I am a Fullstack Developer focused on Microsoft technologies, primarily working with <strong class="text-(--color-primary)">.NET, Angular, and SQL Server</strong> to build scalable and efficient web applications.</p>
+        <p class="w-5/6 mt-5">My journey in technology began with IT support, quickly evolving into backend development and, subsequently, fullstack development. Today, I work developing solutions using .NET, with experience in creating and maintaining APIs, system integration, and developing modern interfaces with Angular.</p>
+        <p class="w-5/6 mt-5">I have professional experience in diverse contexts, from public institutions to private companies, which has given me a broad business perspective, adaptability, and a focus on problem-solving.</p>
+        <p class="w-5/6 mt-5">My career transition—from industrial operator to developer—reinforces my commitment, discipline, and capacity for continuous learning. I hold a degree in Information Technology and also have training in Information Security, which provides a more solid understanding of secure development best practices.</p>
+      </div>
     </div>
   </ng-template>
 
