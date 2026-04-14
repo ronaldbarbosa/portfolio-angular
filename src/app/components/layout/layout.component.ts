@@ -9,6 +9,4 @@ import { MainComponent } from "./main/main.component";
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
-export class LayoutComponent {
-
-}
+export class LayoutComponent { }

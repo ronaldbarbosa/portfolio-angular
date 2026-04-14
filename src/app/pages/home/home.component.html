@@ -1,1 +1,13 @@
-<app-layout></app-layout>
+<div>
+  <ng-template #homeContent>
+    <div class="bg-gradient from-emerald-400 to-teal-500 text-white p-6 rounded-lg shadow-lg my-4">
+      <h3 class="text-xl font-bold">🌟 Conteúdo do Componente Avô!</h3>
+      <p class="text-sm mt-2">Isso veio do HomeComponent (avô) e está sendo renderizado no MainComponent (neto)</p>
+      <button class="mt-3 bg-white text-emerald-600 px-4 py-2 rounded-md font-semibold hover:bg-gray-100">
+        Botão do Avô
+      </button>
+    </div>
+  </ng-template>
+
+  <app-layout></app-layout>
+</div>

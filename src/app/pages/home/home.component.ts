@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { afterNextRender, AfterViewInit, Component, TemplateRef, ViewChild } from '@angular/core';
 import { LayoutComponent } from '../../components/layout/layout.component';
+import { ContentService } from '../../services/content.service';
 
 @Component({
   selector: 'app-home',
@@ -8,5 +9,14 @@ import { LayoutComponent } from '../../components/layout/layout.component';
   styleUrl: './home.component.css'
 })
 export class HomeComponent {
+  @ViewChild('homeContent', { static: true }) homeContent!: TemplateRef<any>;
 
+  constructor(private contentService: ContentService) {
+    // afterNextRender garante que o DOM está pronto
+    afterNextRender(() => {
+      if (this.homeContent) {
+        this.contentService.setContent(this.homeContent);
+      }
+    });
+  }
 }
