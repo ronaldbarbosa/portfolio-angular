@@ -1,15 +1,12 @@
-import { ApplicationConfig, provideZoneChangeDetection, APP_INITIALIZER } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, provideAppInitializer, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { firstValueFrom, catchError, of } from 'rxjs';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { AuthService } from './services/auth.service';
 import { authInterceptor } from './interceptors/auth.interceptor';
-
-function initAuth(authService: AuthService) {
-  return () => authService.init().pipe().subscribe({ error: () => {} });
-}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,11 +14,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initAuth,
-      deps: [AuthService],
-      multi: true,
-    },
+    provideAppInitializer(() => {
+      const authService = inject(AuthService);
+      return firstValueFrom(authService.init().pipe(catchError(() => of(null))));
+    }),
   ]
 };

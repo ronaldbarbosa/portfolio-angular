@@ -1,62 +1,51 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable, tap, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export interface UserInfo {
-  name: string;
-  username: string;
-  email: string;
+interface TokenResponse {
+  access_token: string;
+  expires_in: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiBase}/api/auth`;
+  private accessToken: string | null = null;
+  private tokenExpiry = 0;
 
-  private user$ = new BehaviorSubject<UserInfo | null>(null);
-
-  get currentUser$(): Observable<UserInfo | null> {
-    return this.user$.asObservable();
+  init(): Observable<void> {
+    return this.fetchToken();
   }
 
-  get isAuthenticated(): boolean {
-    return this.user$.value !== null;
+  getAccessToken(): string | null {
+    if (this.accessToken && Date.now() < this.tokenExpiry) {
+      return this.accessToken;
+    }
+    return null;
   }
 
-  init(): Observable<UserInfo> {
-    return this.http.get<UserInfo>(`${this.base}/me`, { withCredentials: true }).pipe(
-      tap(user => this.user$.next(user)),
-      catchError(err => {
-        this.user$.next(null);
-        return throwError(() => err);
-      })
+  refreshToken(): Observable<void> {
+    return this.fetchToken();
+  }
+
+  private fetchToken(): Observable<void> {
+    const { tokenUrl, clientId, username, password } = environment.keycloak;
+
+    const body = new HttpParams()
+      .set('grant_type', 'password')
+      .set('client_id', clientId)
+      .set('username', username)
+      .set('password', password);
+
+    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+
+    return this.http.post<TokenResponse>(tokenUrl, body.toString(), { headers }).pipe(
+      tap(({ access_token, expires_in }) => {
+        this.accessToken = access_token;
+        this.tokenExpiry = Date.now() + expires_in * 1000;
+      }),
+      map(() => void 0)
     );
-  }
-
-  login(username: string, password: string): Observable<UserInfo> {
-    return this.http
-      .post<UserInfo>(`${this.base}/login`, { username, password }, { withCredentials: true })
-      .pipe(tap(user => this.user$.next(user)));
-  }
-
-  refreshToken(): Observable<UserInfo> {
-    return this.http
-      .post<UserInfo>(`${this.base}/refresh`, {}, { withCredentials: true })
-      .pipe(
-        tap(user => this.user$.next(user)),
-        catchError(err => {
-          this.user$.next(null);
-          return throwError(() => err);
-        })
-      );
-  }
-
-  logout(): Observable<void> {
-    return this.http
-      .post<void>(`${this.base}/logout`, {}, { withCredentials: true })
-      .pipe(tap(() => this.user$.next(null)));
   }
 }

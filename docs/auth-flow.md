@@ -1,22 +1,10 @@
 # Fluxo de Autenticação
 
-## Visão Geral
+## Contexto
 
-A autenticação usa o padrão **BFF (Backend for Frontend)**. Em vez do Angular chamar o Keycloak diretamente, ele chama o servidor Express que acompanha a aplicação — e é esse servidor que conversa com o Keycloak e devolve os tokens em cookies HTTP-only.
+A aplicação é **pública** — não existe login de usuário. A autenticação existe para que a aplicação possa consumir a API protegida. Para isso, é usada uma **service account** (`portfolio`) cadastrada no Keycloak, cujas credenciais ficam no arquivo de environment.
 
-> **Analogia .NET:** pense no servidor Express como um Controller de uma API que faz proxy da autenticação. O Angular seria o cliente (Razor Pages, Blazor ou um SPA qualquer) que nunca vê o token diretamente.
-
----
-
-## Por que HTTP-only cookies?
-
-Tokens guardados em `localStorage` são acessíveis via JavaScript — qualquer script malicioso (XSS) pode roubá-los. Cookies HTTP-only **não podem ser lidos por JavaScript**: o navegador os envia automaticamente nas requisições, mas nenhum código no browser consegue acessar seu valor.
-
-| | localStorage | Cookie HTTP-only |
-|---|---|---|
-| Leitura via JS | Sim | Não |
-| Envio automático | Não (manual) | Sim |
-| Vulnerável a XSS | Sim | Não |
+> **Analogia .NET:** é equivalente a um `HttpClient` configurado com `ClientCredentials` para consumir uma API interna — a aplicação se autentica, não o usuário.
 
 ---
 
@@ -24,160 +12,117 @@ Tokens guardados em `localStorage` são acessíveis via JavaScript — qualquer 
 
 ```
 src/
-├── server/
-│   ├── auth.service.ts       # Lógica: chama Keycloak, manipula cookies, decodifica JWT
-│   └── auth.routes.ts        # Rotas Express: /api/auth/login|refresh|me|logout
-├── server.ts                 # Servidor Express principal (monta as rotas)
 ├── environments/
-│   ├── environment.ts        # Produção
-│   └── environment.development.ts  # Desenvolvimento (localhost:4000)
-└── app/
-    ├── services/
-    │   └── auth.service.ts   # Service Angular: chama o BFF, gerencia estado do usuário
-    ├── interceptors/
-    │   └── auth.interceptor.ts  # Interceptor: trata 401 fazendo refresh automático
-    └── app.config.ts         # Registra o interceptor e o APP_INITIALIZER
+│   ├── environment.ts                  # Produção: URLs + credenciais da service account
+│   └── environment.development.ts      # Dev: localhost URLs + credenciais
+├── app/
+│   ├── app.config.ts                   # Registra o interceptor e o inicializador de auth
+│   ├── services/
+│   │   └── auth.service.ts             # Autentica no Keycloak, guarda token em memória
+│   └── interceptors/
+│       └── auth.interceptor.ts         # Injeta o token em toda request; renova se expirar
 ```
 
 ---
 
 ## Fluxo 1 — Boot da aplicação
 
-Ao carregar a aplicação, o Angular tenta restaurar uma sessão existente.
+Ao carregar, antes de qualquer componente ser exibido, a aplicação se autentica no Keycloak.
 
 ```
-Angular inicia
+App inicializa
     │
-    └─▶ APP_INITIALIZER executa auth.init()
+    └─▶ provideAppInitializer executa authService.init()
             │
-            └─▶ GET /api/auth/me  (envia cookie automaticamente)
-                    │
-                    ├─ cookie válido  → Express decodifica o JWT, retorna { name, email }
-                    │                   Angular salva o usuário no BehaviorSubject
-                    │
-                    └─ sem cookie / expirado → 401 (silenciado)
-                                               Usuário permanece como não autenticado
-```
-
-> **Equivalente .NET:** `IHostedService` ou middleware que valida o cookie de sessão na primeira requisição.
-
----
-
-## Fluxo 2 — Login
-
-```
-Usuário preenche username e senha
-    │
-    └─▶ AuthService.login(username, password)
-            │
-            └─▶ POST /api/auth/login  { username, password }
-                    │
-                    └─▶ Express monta o body URL-encoded e chama o Keycloak:
-                        POST keycloak/token  grant_type=password
-                            │
-                            └─▶ Keycloak retorna access_token + refresh_token
-                                    │
-                                    └─▶ Express grava os cookies HTTP-only:
-                                        Set-Cookie: access_token=...  (HttpOnly, expira em 5min)
-                                        Set-Cookie: refresh_token=... (HttpOnly, expira em 30min)
-                                            │
-                                            └─▶ Retorna ao Angular: { name, username, email }
-                                                    │
-                                                    └─▶ Angular salva no BehaviorSubject
-                                                        (a view reage automaticamente)
-```
-
-> **Nota:** O Angular nunca vê o valor do token. Só recebe os dados do usuário para exibição.
-
----
-
-## Fluxo 3 — Requisições autenticadas
-
-Após o login, o navegador envia os cookies automaticamente em toda requisição para o mesmo domínio. Nenhuma configuração extra é necessária no Angular além do `withCredentials: true`.
-
-```
-Angular faz GET /api/alguma-coisa
-    │
-    └─▶ Navegador anexa automaticamente:
-        Cookie: access_token=eyJ...
-            │
-            └─▶ Servidor/API valida o token e responde
-```
-
----
-
-## Fluxo 4 — Token expirado (refresh automático)
-
-O `access_token` dura apenas 5 minutos. Quando expira, o servidor retorna `401`. O interceptor Angular captura esse erro e faz o refresh de forma transparente.
-
-```
-Requisição qualquer retorna 401
-    │
-    └─▶ authInterceptor intercepta o erro
-            │
-            ├─ é um endpoint /api/auth/ ? → sim → propaga o erro (evita loop infinito)
-            │
-            ├─ já está fazendo refresh?  → sim → propaga o erro (evita chamadas duplicadas)
-            │
-            └─ não → POST /api/auth/refresh  (envia o cookie refresh_token)
+            └─▶ POST keycloak/token
+                    grant_type=password
+                    client_id=Portfolio
+                    username=portfolio
+                    password=portfolio_web
                         │
-                        ├─ sucesso → Express grava cookies novos
-                        │           Interceptor reexecuta a requisição original
-                        │           Usuário não percebe nada
-                        │
-                        └─ falha  → AuthService.logout() limpa os cookies
-                                    Usuário precisa logar novamente
+                        └─▶ Keycloak retorna { access_token, expires_in }
+                                │
+                                └─▶ Token salvo em memória (variável privada do AuthService)
+                                    Tempo de expiração calculado e salvo também
 ```
 
-> **Equivalente .NET:** um `DelegatingHandler` no `HttpClient` que refaz a requisição após renovar o token.
+> **Por que em memória e não em localStorage?** O token pertence à aplicação, não ao usuário. Não há motivo para persistir entre sessões — a cada reload a aplicação se autentica novamente. Memória é mais simples e suficiente.
 
 ---
 
-## Fluxo 5 — Logout
+## Fluxo 2 — Requisições à API
+
+Toda chamada HTTP passa pelo `authInterceptor`, que injeta o token automaticamente.
 
 ```
-Usuário clica em "Sair"
+Componente chama projectsService.getProjects()
     │
-    └─▶ AuthService.logout()
+    └─▶ HttpClient emite GET /api/projects
             │
-            └─▶ POST /api/auth/logout
+            └─▶ authInterceptor intercepta
                     │
-                    └─▶ Express apaga os cookies:
-                        Set-Cookie: access_token=; Max-Age=0
-                        Set-Cookie: refresh_token=; Max-Age=0
-                            │
-                            └─▶ Angular limpa o BehaviorSubject (usuário = null)
-                                A view reage e redireciona para login
+                    ├─ token válido em memória? → clona a request com o header:
+                    │                              Authorization: Bearer eyJ...
+                    │                              Envia para a API
+                    │
+                    └─ sem token (ainda não autenticou)? → envia sem header
+                                                           API retorna 401 → ver Fluxo 3
+```
+
+> **Equivalente .NET:** um `DelegatingHandler` no `HttpClient` que adiciona o header de autorização em toda requisição de saída.
+
+---
+
+## Fluxo 3 — Token expirado (renovação automática)
+
+O `access_token` do Keycloak tem vida curta (padrão: 5 minutos). Quando expira, a API retorna `401`. O interceptor captura esse erro e re-autentica automaticamente, sem que o usuário perceba.
+
+```
+API retorna 401
+    │
+    └─▶ authInterceptor captura o erro
+            │
+            ├─ é uma chamada ao próprio Keycloak? → sim → propaga o erro (evita loop)
+            │
+            ├─ já está renovando? → sim → propaga o erro (evita chamadas paralelas)
+            │
+            └─ não → authService.refreshToken()
+                        │
+                        └─▶ POST keycloak/token (mesmas credenciais)
+                                │
+                                ├─ sucesso → atualiza token em memória
+                                │            reexecuta a request original com novo token
+                                │            chamador não percebe nada
+                                │
+                                └─ falha → propaga o erro para o componente tratar
 ```
 
 ---
 
-## Estado de autenticação no Angular
+## Configuração por ambiente
 
-O `AuthService` expõe um `BehaviorSubject<UserInfo | null>` chamado `user$`. Qualquer componente pode se inscrever para reagir a mudanças:
+As credenciais e URLs ficam nos arquivos de environment, trocados automaticamente pelo Angular CLI no build.
 
-```typescript
-// Em qualquer componente
-readonly user = toSignal(this.authService.currentUser$);
-
-// No template
-@if (user()) {
-  <span>Olá, {{ user()!.name }}</span>
-} @else {
-  <a routerLink="/login">Entrar</a>
-}
-```
-
-> **Equivalente .NET:** similar ao `ClaimsPrincipal` disponível via `HttpContext.User`, mas reativo — a view atualiza automaticamente sem precisar de reload.
-
----
-
-## Variáveis de ambiente (servidor)
-
-O servidor Express lê as configurações do Keycloak via variáveis de ambiente:
-
-| Variável | Padrão | Descrição |
+| Variável | Dev (`environment.development.ts`) | Produção (`environment.ts`) |
 |---|---|---|
-| `KEYCLOAK_TOKEN_URL` | `http://localhost:8080/realms/portfolio/...` | URL do endpoint de token |
-| `KEYCLOAK_CLIENT_ID` | `Portfolio` | Client ID cadastrado no Keycloak |
-| `NODE_ENV` | — | Se `production`, ativa o flag `Secure` nos cookies |
+| `keycloak.tokenUrl` | `http://localhost:8080/realms/portfolio/...` | URL do Keycloak em produção |
+| `keycloak.clientId` | `Portfolio` | `Portfolio` |
+| `keycloak.username` | `portfolio` | `portfolio` |
+| `keycloak.password` | `portfolio_web` | `portfolio_web` |
+| `projectsApiUrl` | `http://localhost:5142` | URL da API em produção |
+
+---
+
+## Resumo do ciclo de vida do token
+
+```
+Boot → autentica → token em memória (válido por ~5min)
+                        │
+                  requests normais → interceptor adiciona token
+                        │
+                  token expira → API retorna 401
+                        │
+                  interceptor re-autentica → novo token em memória
+                        │
+                  request reexecutada automaticamente
+```

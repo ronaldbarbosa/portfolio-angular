@@ -11,10 +11,16 @@ export const authInterceptor: HttpInterceptorFn = (
 ) => {
   const authService = inject(AuthService);
 
-  return next(req).pipe(
+  const withToken = (token: string) =>
+    req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+
+  const token = authService.getAccessToken();
+  const authReq = token ? withToken(token) : req;
+
+  return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      const isAuthEndpoint = req.url.includes('/api/auth/');
-      if (error.status !== 401 || isAuthEndpoint || isRefreshing) {
+      const isKeycloakCall = req.url.includes('/openid-connect/token');
+      if (error.status !== 401 || isKeycloakCall || isRefreshing) {
         return throwError(() => error);
       }
 
@@ -23,12 +29,12 @@ export const authInterceptor: HttpInterceptorFn = (
       return authService.refreshToken().pipe(
         switchMap(() => {
           isRefreshing = false;
-          return next(req);
+          const newToken = authService.getAccessToken();
+          return next(newToken ? withToken(newToken) : req);
         }),
-        catchError(refreshError => {
+        catchError(err => {
           isRefreshing = false;
-          authService.logout().subscribe();
-          return throwError(() => refreshError);
+          return throwError(() => err);
         })
       );
     })
