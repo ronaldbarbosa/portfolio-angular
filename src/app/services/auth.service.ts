@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, tap, map } from 'rxjs';
+import { Observable, tap, map, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 interface TokenResponse {
@@ -15,6 +15,7 @@ export class AuthService {
   private tokenExpiry = 0;
 
   init(): Observable<void> {
+    if (!environment.requiresAuth) return of(void 0);
     return this.fetchToken();
   }
 

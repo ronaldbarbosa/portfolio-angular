@@ -34,6 +34,8 @@ export class ThemeService {
   }
 
   toggle(): void {
+    document.body.classList.add('theme-transitioning');
     this.isDarkMode.update(current => !current);
+    setTimeout(() => document.body.classList.remove('theme-transitioning'), 500);
   }
 }
