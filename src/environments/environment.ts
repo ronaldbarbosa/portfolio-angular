@@ -7,5 +7,5 @@ export const environment = {
     username: '',
     password: '',
   },
-  projectsApiUrl: 'https://portfolio-microservices.onrender.com/',
+  projectsApiUrl: 'https://portfolio-microservices.onrender.com',
 };
