@@ -10,7 +10,7 @@ import { environment } from '../../environments/environment';
 })
 export class ProjectsService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.projectsApiUrl}/api/projects`;
+  private readonly base = `${environment.projectsApiUrl}/api/projects?page=1`;
 
   getProjects(page = 1): Observable<PaginatedResponse<Project>> {
     return this.http.get<PaginatedResponse<Project>>(`${this.base}?page=${page}`);
