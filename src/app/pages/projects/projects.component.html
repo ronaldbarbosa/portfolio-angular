@@ -48,11 +48,11 @@
 
               <!-- Tech Stack -->
               <div class="flex flex-wrap gap-2">
-                @if (project.backend) {
-                  <span class="px-2.5 py-0.5 text-xs font-medium rounded-md border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">{{ project.backend }}</span>
+                @for (item of splitTools(project.backend); track item) {
+                  <span class="px-2.5 py-0.5 text-xs font-medium rounded-md border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">{{ item }}</span>
                 }
-                @if (project.frontend) {
-                  <span class="px-2.5 py-0.5 text-xs font-medium rounded-md border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">{{ project.frontend }}</span>
+                @for (item of splitTools(project.frontend); track item) {
+                  <span class="px-2.5 py-0.5 text-xs font-medium rounded-md border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">{{ item }}</span>
                 }
                 @for (tool of splitTools(project.tools); track tool) {
                   <span class="px-2.5 py-0.5 text-xs font-medium rounded-md border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">{{ tool }}</span>
