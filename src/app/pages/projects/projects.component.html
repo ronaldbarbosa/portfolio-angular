@@ -25,10 +25,9 @@
             <div class="relative h-48 overflow-hidden bg-(--color-border)">
               @if (project.image) {
                 <img
-                  [ngSrc]="project.image"
+                  [src]="project.image"
                   [alt]="project.name"
-                  fill
-                  class="object-cover group-hover:scale-105 transition-transform duration-500"
+                  class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                 />
               }
               @if (!project.finished) {

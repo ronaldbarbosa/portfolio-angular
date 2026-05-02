@@ -1,5 +1,4 @@
 import { afterNextRender, Component, inject, signal, TemplateRef, ViewChild } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { ContentService } from '../../services/content.service';
 import { ProjectsService } from '../../services/projects.service';
@@ -8,7 +7,7 @@ import { PaginatedResponse } from '../../models/paginatedResponse.model';
 
 @Component({
   selector: 'app-projects',
-  imports: [LayoutComponent, NgOptimizedImage],
+  imports: [LayoutComponent],
   templateUrl: './projects.component.html',
   styleUrl: './projects.component.css'
 })

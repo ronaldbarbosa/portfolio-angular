@@ -1,19 +1,62 @@
 <div>
   <ng-template #homeContent>
-    <div class="flex p-5">
-      <div class="hidden lg:flex w-1/3 justify-end items-center mx-10">
-      <img [ngSrc]="imagemUrl" alt="Angular logo" width="512" height="128" class="rounded-4xl" />
+    <div class="px-6 py-10 md:px-12 lg:px-20 max-w-7xl mx-auto w-full flex items-center gap-12">
 
-      <!-- Teste 4: Usando require (se for build específico) -->
+      <!-- Photo -->
+      <div class="hidden lg:flex w-1/3 justify-end shrink-0">
+        <img [ngSrc]="imagemUrl" alt="Ronald Barbosa" width="437" height="613" priority class="rounded-4xl" />
       </div>
-      <div class="flex flex-col w-2/3 max-lg:w-full mx-5 ml-10 text-white">
-        <h2 class="text-xl text-(--color-primary)!">Full Stack Developer</h2>
-        <h1 class="text-5xl">Ronald Barbosa</h1>
-        <p class="w-5/6 mt-5">I am a Fullstack Developer focused on Microsoft technologies, primarily working with <strong class="text-(--color-primary)">.NET, Angular, and SQL Server</strong> to build scalable and efficient web applications.</p>
-        <p class="w-5/6 mt-5">My journey in technology began with IT support, quickly evolving into backend development and, subsequently, fullstack development. Today, I work developing solutions using .NET, with experience in creating and maintaining APIs, system integration, and developing modern interfaces with Angular.</p>
-        <p class="w-5/6 mt-5">I have professional experience in diverse contexts, from public institutions to private companies, which has given me a broad business perspective, adaptability, and a focus on problem-solving.</p>
-        <p class="w-5/6 mt-5">My career transition—from industrial operator to developer—reinforces my commitment, discipline, and capacity for continuous learning. I hold a degree in Information Technology and also have training in Information Security, which provides a more solid understanding of secure development best practices.</p>
+
+      <!-- Content -->
+      <div class="flex flex-col flex-1">
+        <h2 class="text-xl text-(--color-primary)">Full Stack Developer</h2>
+        <h1 class="text-5xl mt-1">Ronald Barbosa</h1>
+
+        <p class="w-5/6 max-lg:w-full mt-5">
+          Focused on Microsoft technologies — I build scalable web applications with
+          <strong class="text-(--color-primary)">.NET</strong>,
+          <strong class="text-(--color-primary)">Angular</strong> and
+          <strong class="text-(--color-primary)">SQL Server</strong>,
+          covering everything from API design to frontend implementation.
+        </p>
+        <p class="w-5/6 max-lg:w-full mt-3">
+          IT background evolved into fullstack development across public and private sectors.
+          Degree in Information Technology with additional training in Information Security.
+        </p>
+
+        <!-- Tech stack -->
+        <div class="flex flex-wrap gap-2 mt-6 w-5/6 max-lg:w-full">
+          <span class="px-3 py-1 text-sm font-medium rounded-lg border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">C# / .NET</span>
+          <span class="px-3 py-1 text-sm font-medium rounded-lg border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">Angular</span>
+          <span class="px-3 py-1 text-sm font-medium rounded-lg border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">TypeScript</span>
+          <span class="px-3 py-1 text-sm font-medium rounded-lg border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">SQL Server</span>
+          <span class="px-3 py-1 text-sm font-medium rounded-lg border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">REST APIs</span>
+          <span class="px-3 py-1 text-sm font-medium rounded-lg border border-(--color-border) bg-(--color-accent-subtle) text-(--color-primary)">Docker</span>
+        </div>
+
+        <!-- CTAs -->
+        <div class="flex gap-3 mt-8">
+          <a
+            href="/projects"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-(--color-primary) text-white font-medium hover:opacity-90 transition-opacity"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
+            </svg>
+            View Projects
+          </a>
+          <a
+            href="/contact"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-(--color-border) font-medium hover:border-(--color-primary) hover:text-(--color-primary) transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+            </svg>
+            Get in Touch
+          </a>
+        </div>
       </div>
+
     </div>
   </ng-template>
 
