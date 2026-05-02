@@ -10,8 +10,12 @@
 
     <!-- Loading -->
     @if (loading()) {
-      <div class="flex justify-center items-center py-24">
+      <div class="flex flex-col justify-center items-center py-24 gap-4">
         <div class="size-10 rounded-full border-[3px] border-(--color-border) border-t-(--color-primary) animate-spin"></div>
+        <p class="text-sm text-(--color-text-secondary) text-center">Carregando projetos...</p>
+        <p class="text-xs text-(--color-text-tertiary) text-center max-w-sm">
+          O servidor está no plano gratuito e hiberna quando ninguém acessa. Estamos acordando ele agora — ele promete que vale a pena esperar.
+        </p>
       </div>
     }
 
